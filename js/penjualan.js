@@ -18,6 +18,10 @@ $(document).ready(function(){
                 $("#nip").focus();
                 return false;
             }
+        }else if($("#pembeli").val()==0){
+                alert("Jenis Pembeli belum ditentukan");
+                $("#pembeli").focus();
+                return false;
         }else if($("#hargaBeli").val()==""){
             alert("Jumlah barang  harus diisi");
             $("#hargaBeli").focus();
@@ -37,9 +41,11 @@ $(document).ready(function(){
         }else if($("#hargaJual").val()<=$("#hargaUntung").val()){
             alert("Harga terjual tidak memungkinkan !");
             $("#hargaJual").focus();
+            return false;
         }else if($("#jumlahTerjual").val()<=0){
             alert("Jumlah terjual tidak boleh 0 !");
             $("#jumlahTerjual").focus();
+            return false;
         }
     });
     //        cek pembeli

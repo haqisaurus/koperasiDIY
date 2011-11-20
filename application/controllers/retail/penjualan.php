@@ -13,11 +13,12 @@
 class Penjualan extends CI_Controller {
 
     //put your code here
-    var $limit = 50;
+    var $limit = 5;
 
     function __construct() {
         parent::__construct();
         $this->load->model('penjualan_model', '', TRUE);
+        $this->load->helper('tambahan');
     }
 
     function index() {
@@ -55,15 +56,29 @@ class Penjualan extends CI_Controller {
             if ($this->penjualan_model->getFromKode($this->input->post('kodeBarang'))->num_rows() > 0) {
 //            penjualan kepada anggota bpd (pembeli =1)
                 if ($this->input->post('pembeli') == 1) {
+                    if($this->input->post('jenis')==0){
+                        $status = 1;
+                    }else{
+                        $status =0;
+                    }
                     $dataInput = array(
                         'harga_jual' => $this->input->post('hargaJual'),
                         'tanggal' => $this->input->post('tanggalTerjual'),
                         'jumlah' => $this->input->post('jumlahBarang'),
                         'status_bayar' => $this->input->post('jenis'),
+                        'status_lunas' => $status,
                         'nip' => $this->input->post('nip'),
                         'kode_barang' => $this->input->post('kodeBarang'));
                     $this->penjualan_model->insertPenjualanAnggota($dataInput);
                     $this->penjualan_model->updateBarangTerjual($this->input->post('kodeBarang'), $this->input->post('jumlahBarang'));
+//                    jika hutang
+                    if ($this->input->post('jenis') == 1) {
+                        $dataInputUtang = array(
+                            'tanggal_bayar' => $this->input->post('tanggalTerjual'),
+                            'nip' => $this->input->post('nip'),
+                            'saldo' => $this->input->post('hargaJual'));
+                        $this->penjualan_model->insertHutang($dataInputUtang);
+                    }
                 } else {
                     $dataInput = array(
                         'harga_jual' => $this->input->post('hargaJual'),
@@ -90,11 +105,12 @@ class Penjualan extends CI_Controller {
         $data['link1'] = anchor('retail/penjualan', "Cari", array());
         $data['form_action'] = site_url('retail/penjualan/deletePenjualanChecked/');
         $data['content'] = "retail/penjualan/list_penjualan_view";
-        $uri_segment = 3;
+        $uri_segment = 4;
         $offset = $this->uri->segment($uri_segment);
         $datas = $this->penjualan_model->getAllPenjualan($this->limit, $offset)->result();
         $num_rows = $this->penjualan_model->countPenjualan();
         if ($num_rows > 0) {
+            $config['base_url'] = site_url('retail/penjualan/showListPenjualan');
             $config['total_rows'] = $num_rows;
             $config['per_page'] = $this->limit;
             $config['uri_segment'] = $uri_segment;
@@ -108,7 +124,14 @@ class Penjualan extends CI_Controller {
             $i = $i + 1;
             foreach ($datas as $row) {
                 $cekbox = '<input type="checkbox" name="id[]" value="' . $row->kode_barang . '"/>';
-                $this->table->add_row($cekbox, $i++, $row->nama_barang, $row->kode_barang, $row->jumlah, $row->harga_jual, $row->tanggal, anchor('retail/barang/updateBarang/' . $row->kode_barang, "Update ", array('class' => 'update', 'id' => 'edit')) . ' | ' . anchor('retail/barang/deleteBarang/' . $row->kode_barang, "Hapus ", array('class' => 'delete', 'id' => 'hapus', 'onclick' => "return confirm('Anda yakin akan menghapus data ini?')")));
+                $this->table->add_row(
+                        $cekbox, $i++,
+                        $row->nama_barang,
+                        $row->kode_barang,
+                        $row->jumlah,
+                        rupiah($row->harga_jual),
+                        $row->tanggal,
+                        anchor('retail/barang/updateBarang/' . $row->kode_barang, "Update ", array('class' => 'update', 'id' => 'edit')) . ' | ' . anchor('retail/barang/deleteBarang/' . $row->kode_barang, "Hapus ", array('class' => 'delete', 'id' => 'hapus', 'onclick' => "return confirm('Anda yakin akan menghapus data ini?')")));
             }
             $data['table'] = $this->table->generate();
         } else {

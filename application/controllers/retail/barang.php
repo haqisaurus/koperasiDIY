@@ -138,11 +138,12 @@ class Barang extends CI_Controller {
         $data['link1'] = anchor('retail/barang', "Cari", array());
         $data['form_action'] = site_url('retail/barang/deleteBarangChecked/');
         $data['content'] = "retail/barang/list_barang_view";
-        $uri_segment = 3;
+        $uri_segment = 4;
         $offset = $this->uri->segment($uri_segment);
         $datas = $this->barang_model->getAllBarang($this->limit, $offset)->result();
         $num_rows = $this->barang_model->countBarang();
         if ($num_rows > 0) {
+            $config['base_url'] = site_url('retail/barang/showListBarang');
             $config['total_rows'] = $num_rows;
             $config['per_page'] = $this->limit;
             $config['uri_segment'] = $uri_segment;
